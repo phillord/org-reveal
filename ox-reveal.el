@@ -351,7 +351,7 @@ holding contextual information."
       ;; Standard headline.  Export it as a slide
       (let* ((level (org-export-get-relative-level headline info))
 	     (preferred-id (or (org-element-property :CUSTOM_ID headline)
-			       (org-export-get-reference headline info)
+			       ;;(org-export-get-reference headline info)
 			       (org-element-property :ID headline)))
 	     (hlevel (org-reveal--get-hlevel info))
 	     (header (plist-get info :reveal-slide-header))
@@ -615,7 +615,7 @@ holding export options."
   (let ((attr-html (cond (attributes (format " %s" (org-html--make-attribute-string attributes)))
                          (checkbox (format " class=\"%s\"" (symbol-name checkbox)))
                          (t "")))
-	(checkbox (concat (org-html-checkbox checkbox info)
+	(checkbox (concat (org-html-checkbox checkbox )
 			  (and checkbox " ")))
 	(br (org-html-close-tag "br" nil info)))
     (concat
