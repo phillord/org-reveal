@@ -306,6 +306,11 @@ can contain the following escaping elements:
           (const remotes)
           (const multiplex)))
 
+(defcustom org-reveal-inline
+  t
+  "Inline as much as possible to give a single file.")
+
+
 (defun if-format (fmt val)
   (if val (format fmt val) ""))
 
@@ -413,18 +418,39 @@ holding contextual information."
   :tag "Org Export Reveal"
   :group 'org-export)
 
+(defun org-reveal-file-in-tag (file tag)
+  (format "<%s>%s</%s>"
+          tag
+          (org-reveal-file-contents file)
+          tag))
+
+(defun org-reveal-file-contents (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (buffer-string)))
+
+
 (defun org-reveal-stylesheets (info)
   "Return the HTML contents for declaring reveal stylesheets
 using custom variable `org-reveal-root'."
   (let ((root-path (file-name-as-directory (plist-get info :reveal-root))))
     (concat
      ;; stylesheets
-     (format "
+     (if org-reveal-inline
+         (concat
+          (org-reveal-file-in-tag
+           (format "%scss/%s" root-path "reveal.css")
+           "style")
+          (org-reveal-file-in-tag
+           (format "%scss/theme/%s.css" root-path
+                   (plist-get info :reveal-theme))
+           "style"))
+         (format "
 <link rel=\"stylesheet\" href=\"%scss/reveal.css\"/>
 <link rel=\"stylesheet\" href=\"%scss/theme/%s.css\" id=\"theme\"/>
 "
-             root-path root-path
-             (plist-get info :reveal-theme))
+                 root-path root-path
+                 (plist-get info :reveal-theme)))
      ;; extra css
      (let ((extra-css (plist-get info :reveal-extra-css)))
        (if extra-css (format "<link rel=\"stylesheet\" href=\"%s\"/>" extra-css) ""))
@@ -457,11 +483,19 @@ custom variable `org-reveal-root'."
     (concat
      ;; reveal.js/lib/js/head.min.js
      ;; reveal.js/js/reveal.js
-     (format "
+     (if org-reveal-inline
+         (concat
+          (org-reveal-file-in-tag
+           (format "%slib/js/head.min.js" root-path)
+           "script")
+          (org-reveal-file-in-tag
+           (format "%sjs/reveal.js" root-path)
+           "script"))
+         (format "
 <script src=\"%slib/js/head.min.js\"></script>
 <script src=\"%sjs/reveal.js\"></script>
 "
-             root-path root-path)
+                 root-path root-path))
      ;; plugin headings
      "
 <script>
